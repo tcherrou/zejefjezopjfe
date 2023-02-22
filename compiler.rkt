@@ -13,13 +13,109 @@
 (define-syntax-rule (TODO . stx)
   (error "Unfinished skeleton"))
 
+
+
+;; int64? and int32? already implemented
+
+
+(define (p64v1-register? reg)
+  (and (member reg '(rsp rbp rax rbx rcx rdx rsi rdi r8 r9 r10 r11 r12 r13 r14 r15)) #t))
+
+
+
+(define (p64v1-binop? bop)
+  (and (member bop '(+ *)) #t))
+
+
+
+(define (p64v1-sequence s)
+  (match s 
+	 [`(set! ,exp1 ,exp2) 
+  (match* (exp1 exp2)
+	 [ (reg int64)
+	   #:when (and (p64v1-register? reg) (int64? int64)) 
+	   `(set! ,reg ,int64)]
+	 [(reg1 reg2)
+	  #:when (and (p64v1-register? reg1)  (p64v1-register? reg2))
+	  `(set! ,reg1 ,reg2)] 
+	 [ (reg `(,binop ,reg ,int32)) 
+	   #:when (and (p64v1-binop? binop) (p64v1-register? reg) (int32? int32)) 
+	   `(set! ,reg (,binop ,reg ,int32))]
+	 [ (reg1 `(,binop ,reg1 ,reg2))
+	   #:when (and (p64v1-binop? binop) (p64v1-register? reg1) (p64v1-register? reg2))
+	 `(set! ,reg1 (,binop ,reg1 ,reg2))]
+ 	 [ (reg1 `(,binop ,reg2 ,_))
+	   (error "Register require the same name!")])]
+  	[e (error (string-append "invalid instruction: " (~a e)))]))
+
+(p64v1-sequence '(set! rsp 15))
+(p64v1-sequence '(set! rsp rsp))
+(p64v1-sequence '(set! rsp (+ rsp 26)))
+; (p64v1-sequence '(set! rsp (* rax 2)))
+
+
+
+
+
+
+(define (p64v1-process p)
+  (match p
+	 [`(begin ,s ...)  `(begin ,@(map p64v1-sequence s))]))
+
+
+
+
+
+
+
+
+
 ;; Optional; if you choose not to complete, implement a stub that returns the input
+
+
+
+;; 
+
+
+
 (define (check-paren-x64-init p)
-  (TODO ...))
+  (define (initialized? reg inits)
+    (and (member reg inits) #t))
+      (match p
+	   [`(begin ,s ...) 
+	(let check-initialized
+    	((initialized '())
+     	 (s s))
+	     (match s
+		    ['() p]
+		    [`((set! ,_ (,binop ,reg ,_)) ,rest ...)
+
+		      (if (initialized? reg initialized)
+			(check-initialized initialized rest)
+			(error (string-append "The register has not been initialized: " (~a reg))))]
+
+		    [`((set! ,reg ,_) ,rest ...)
+		      (check-initialized `(,reg ,@initialized) rest)]
+		    		    ))]))
+
+
+(check-paren-x64-init
+   '(begin
+      (set! rax 170679)
+      (set! rdi rax)
+      (set! rdi (+ rdi rdi))
+      (set! rsp rdi)
+      (set! rsp (* rsp rsp))
+      (set! rbx 8991)))
+
 
 ;; Optional; if you choose not to complete, implement a stub that returns the input
 (define (check-paren-x64-syntax p)
-  (TODO ...))
+  (p64v1-process p))
+
+(check-paren-x64-syntax '(begin 
+		  (set! rsp 15)
+		  (set! rax 16)))
 
 (define (check-paren-x64 p)
   (check-paren-x64-init (check-paren-x64-syntax p)))
