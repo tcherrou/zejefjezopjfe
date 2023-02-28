@@ -3,7 +3,10 @@
 (require
  cpsc411/compiler-lib)
 
+
+
 (provide
+ compile-paren-x64
  check-paren-x64
  interp-paren-x64
  generate-x64
@@ -16,6 +19,10 @@
 
 
 ;; int64? and int32? already implemented
+
+
+
+
 
 
 (define (p64v1-register? reg)
@@ -47,11 +54,6 @@
  	 [ (reg1 `(,binop ,reg2 ,_))
 	   (error (string-append "Register in instruction: "(~a exp1 exp2)  "require the same name!"))])]
   	[e (error (string-append "invalid instruction: " (~a e)))]))
-
-(p64v1-sequence '(set! rsp 15))
-(p64v1-sequence '(set! rsp rsp))
-(p64v1-sequence '(set! rsp (+ rsp 26)))
-; (p64v1-sequence '(set! rsp (* rax 2)))
 
 
 
@@ -96,15 +98,6 @@
 	(error (string-append "Register rax not initialized: Please initialize rax in: " (~a p)))))
 
 
-(check-paren-x64-init
-   '(begin
-      (set! rax 170679)
-      (set! rdi rax)
-      (set! rdi (+ rdi rdi))
-      (set! rsp rdi)
-      (set! rsp (* rsp rsp))
-      (set! rbx 8991)))
-
 
 ;; Optional; if you choose not to complete, implement a stub that returns the input
 (define (check-paren-x64-syntax p)
@@ -118,7 +111,6 @@
   (check-paren-x64-init (check-paren-x64-syntax p)))
 
 
-(check-paren-x64 '(begin (set! 5 4)))
 
 
 ;; Optional; if you choose not to complete, implement a stub that returns a valid exit code
@@ -152,9 +144,6 @@
 	 [`(begin ,s ...) (eval-instruction-sequence regs-hash s)]))
 
 
-(interp-paren-x64 '(begin (set! rdi 5)
-			  (set! rax 6)
-			  (set! rax (+ rax 5))))
 (define (generate-x64 p)
   (define binop-hash (make-hash '((+ . "add") (* . "imul"))))
   ; Paren-x64-v1 -> x64-instruction-sequence
@@ -192,20 +181,20 @@
 
   (program->x64 p))
 
-(pretty-display (generate-x64 
-		  '(begin (set! rdi 5)
-			  (set! rax 6)
-			  (set! rax (+ rax 5)))))
-
 
 
 
 
 (define (wrap-x64-run-time str)
-  (TODO ...))
+  (define run-time-string "\n exit: \n mov rdi, rax \n mov rax,60 \n syscall")
+  (string-append str run-time-string))
 
 (define (wrap-x64-boilerplate str)
-  (TODO ...))
+  (define boilerplate-string "global start \n section .text \n start: \n")
+  (string-append  boilerplate-string str))
+
+(define (compile-paren-x64 p)
+  (wrap-x64-boilerplate (wrap-x64-run-time (generate-x64 (check-paren-x64 p)))))
 
 (module+ test
   (require
