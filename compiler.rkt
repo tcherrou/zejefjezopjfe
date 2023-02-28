@@ -103,10 +103,6 @@
 (define (check-paren-x64-syntax p)
   (p64v1-process p))
 
-(check-paren-x64-syntax '(begin 
-		  (set! rsp 15)
-		  (set! rax 16)))
-
 (define (check-paren-x64 p)
   (check-paren-x64-init (check-paren-x64-syntax p)))
 
@@ -195,6 +191,23 @@
 
 (define (compile-paren-x64 p)
   (wrap-x64-boilerplate (wrap-x64-run-time (generate-x64 (check-paren-x64 p)))))
+
+(current-pass-list
+   (list
+    check-paren-x64
+    generate-x64
+    wrap-x64-run-time
+    wrap-x64-boilerplate))
+ (execute
+   '(begin
+      (set! rax 170679)
+      (set! rdi rax)
+      (set! rdi (+ rdi rdi))
+      (set! rsp rdi)
+      (set! rsp (* rsp rsp))
+      (set! rbx 8991))
+    nasm-run/exit-code)
+
 
 (module+ test
   (require
