@@ -288,7 +288,7 @@
 	     (if (int64? triv)
 	       (let ((tmp (fresh)))
 		 `((set! ,tmp ,triv) (halt ,tmp)))
-	       `(halt ,triv))]
+	       `((halt ,triv)))]
 	 [`(,binop ,triv_1 ,triv_2)
 	   (cond [(aloc? triv_1)
 	       `((set! ,triv_1 (,binop ,triv_1 ,triv_2)) (halt ,triv_1))]
@@ -748,6 +748,7 @@
   generate-x64
   wrap-x64-run-time
   wrap-x64-boilerplate))
+
 
 
 
