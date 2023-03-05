@@ -172,7 +172,18 @@
   (match p 
 	 [`(begin ,s ...) (eval-instruction-sequence regs-hash s)]))
 
-
+(module+ test
+	 (define-test-suite interp-paren-x64-test
+			    (check-equal? 
+			      	      (interp-paren-x64
+						   '(begin
+						      (set! rax 170679)
+						      (set! rdi rax)
+						      (set! rdi (+ rdi rdi))
+						      (set! rsp rdi)
+						      (set! rsp (* rsp rsp))
+						      (set! rbx 8991)))
+				      183)))
 
 ; generate-x64 generates the x64 instructions corresponding with the paren-x64-v1 program p
 
@@ -283,6 +294,7 @@
       (list 
       check-paren-x64-init-test
       check-paren-x64-syntax-test
+      interp-paren-x64-test
       correctness-test
 
       )
